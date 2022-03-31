@@ -17,7 +17,7 @@
 				      <el-col :span="6">
 					      <el-form-item label="性别" prop="sex">
 					        <el-select v-model="queryParams.sex" placeholder="请选择性别" clearable size="small">
-					          <el-option label="请选择字典生成" value="" />
+					          <el-option v-for="item in dict.type.sys_user_sex" :label="item.label" :value="item.value" />
 					        </el-select>
 					      </el-form-item>
 				      </el-col>
@@ -108,16 +108,27 @@
 				          v-hasPermi="['owner:report:export']"
 				        >导出</el-button>
 				      </el-col>
-				     
+              <el-col :span="1.5">
+                <el-button
+                  type="success"
+                  plain
+                  icon="el-icon-files"
+                  size="mini"
+                  @click="handleGenerate"
+                >生成报告</el-button>
+              </el-col>
 				    </el-row>
 				     <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
 				 </div>
 
 			    <JTable v-loading="loading" :data="reportList" @selection-change="handleSelectionChange">
 			      <el-table-column type="selection" width="55" align="center" />
-				  <el-table-column label="报告用户信息ID" align="center" prop="id" />
   				  <el-table-column label="姓名" align="center" prop="userName" />
-  				  <el-table-column label="性别" align="center" prop="sex" />
+  				  <el-table-column label="性别" align="center" prop="sex">
+              <template slot-scope="scope">
+                <dict-tag :options="dict.type.sys_user_sex" :value="scope.row.sex" />
+              </template>
+            </el-table-column>
   				  <el-table-column label="身高" align="center" prop="height" />
   				  <el-table-column label="体重" align="center" prop="weight" />
   				  <el-table-column label="报告地址" align="center" prop="reportUrl" />
@@ -138,10 +149,16 @@
 			            @click="handleDelete(scope.row)"
 			            v-hasPermi="['owner:report:remove']"
 			          >删除</el-button>
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-download"
+                  @click="handleDownload(scope.row)"
+                >下载报告</el-button>
 			        </template>
 			      </el-table-column>
 			    </JTable>
-			    
+
 			    <pagination
 			      v-show="total>0"
 			      :total="total"
@@ -163,7 +180,7 @@
         </el-form-item>
         <el-form-item label="性别" prop="sex">
           <el-select v-model="form.sex" placeholder="请选择性别">
-            <el-option label="请选择字典生成" value="" />
+            <el-option v-for="item in dict.type.sys_user_sex" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="身高" prop="height">
@@ -188,10 +205,20 @@
 </template>
 
 <script>
-import { listReport, getReport, delReport, addReport, updateReport, exportReport } from "@/api/owner/report";
+import {
+  listReport,
+  getReport,
+  delReport,
+  addReport,
+  updateReport,
+  exportReport,
+  generateReport,
+  downloadReport
+} from '@/api/owner/report';
 
 export default {
   name: "Report",
+  dicts: ['sys_user_sex'],
   data() {
     return {
       // 遮罩层
@@ -328,6 +355,19 @@ export default {
         this.getList();
         this.$modal.msgSuccess("删除成功");
       }).catch(() => {});
+    },
+    /** 下载报告 */
+    handleDownload(row) {
+      downloadReport(row).then(response => {
+        // todo 处理后端返回的报告
+        this.$modal.msgSuccess("下载成功");
+      })
+    },
+    handleGenerate() {
+      generateReport({}).then(response => {
+        // todo 不可重复生成，逻辑全部在后端实现
+        this.$modal.msgSuccess("生成成功");
+      })
     },
     /** 导出按钮操作 */
     handleExport() {

@@ -51,3 +51,21 @@ export function exportReport(query) {
     params: query
   })
 }
+
+// 生成报告
+export function generateReport(query) {
+  return request({
+    url: '/owner/report/generate',
+    method: 'get',
+    params: query
+  })
+}
+
+// 下载报告
+export function downloadReport(query) {
+  return request({
+    url: '/owner/report/download',
+    method: 'get',
+    params: query
+  })
+}
